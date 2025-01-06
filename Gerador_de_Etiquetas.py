@@ -115,14 +115,13 @@ with st.sidebar:
    st.divider()
    with st.expander("Adicionar Novo Produto", expanded=False):
        st.subheader("Adicionar Novo Produto")
-       form = st.form("novo_produto")
-       novo_id = form.number_input("ID do Produto", min_value=1, step=1)
-       novo_produto = form.text_input("Nome do Produto")
-       nova_quantidade = form.number_input("Quantidade por Embalagem", min_value=0.0, step=0.1)
-       novos_ingredientes = form.text_area("Ingredientes")
-       nova_validade = form.number_input("Prazo de Validade (dias)", min_value=1, step=1)
+       novo_id = st.number_input("ID do Produto", min_value=1, step=1)
+       novo_produto = st.text_input("Nome do Produto")
+       nova_quantidade = st.number_input("Quantidade por Embalagem", min_value=0.0, step=0.1)
+       novos_ingredientes = st.text_area("Ingredientes")
+       nova_validade = st.number_input("Prazo de Validade (dias)", min_value=1, step=1)
        
-       if form.form_submit_button("Adicionar Produto"):
+       if st.button("Adicionar Produto"):
            try:
                data = {
                    "id": novo_id,
@@ -134,8 +133,6 @@ with st.sidebar:
                }
                supabase.table('produtos').insert(data).execute()
                st.success("Produto adicionado com sucesso!")
-               # Força rerun para resetar campos
-               st.rerun()
            except Exception as e:
                st.error(f"Erro ao adicionar produto: {str(e)}")
 
