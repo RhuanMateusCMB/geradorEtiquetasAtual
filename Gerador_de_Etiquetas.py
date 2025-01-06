@@ -12,8 +12,8 @@ import PyPDF2
 import pandas as pd
 import time
 
-supabase_url = "https://qafzyikxuezolusfknpg.supabase.co"
-supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhZnp5aWt4dWV6b2x1c2ZrbnBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1ODQ0MTksImV4cCI6MjA1MTE2MDQxOX0.0vaJejLHeFkXZKic_qmdLI5NaOPxldnp9lxklmwC94w"
+supabase_url = st.secrets["SUPABASE_URL"]
+supabase_key = st.secrets["SUPABASE_KEY"]
 supabase = create_client(supabase_url, supabase_key)
 
 st.set_page_config(
