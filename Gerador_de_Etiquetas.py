@@ -122,19 +122,19 @@ with st.sidebar:
        nova_validade = st.number_input("Prazo de Validade (dias)", min_value=1, step=1)
        
        if st.button("Adicionar Produto"):
-           try:
-               data = {
-                   "id": novo_id,
-                   "produto": novo_produto,
-                   "produtopacote": nova_quantidade,
-                   "ingredientes": novos_ingredientes,
-                   "prazovalidade": nova_validade,
-                   "descricao": f"Ingredientes: {novos_ingredientes} Válido {nova_validade} dia(s) após a data de fabricação."
-               }
-               supabase.table('produtos').insert(data).execute()
-               st.success("Produto adicionado com sucesso!")
-           except Exception as e:
-               st.error(f"Erro ao adicionar produto: {str(e)}")
+             try:
+                 data = {
+                     "id": novo_id,
+                     "produto": novo_produto,
+                     "produtopacote": nova_quantidade,
+                     "ingredientes": novos_ingredientes,
+                     "prazovalidade": nova_validade,
+                     "descricao": f"Ingredientes: {novos_ingredientes} Válido {nova_validade} dia(s) após a data de fabricação."
+                 }
+                 supabase.table('produtos').insert(data).execute()
+                 st.success("Produto adicionado com sucesso!")
+             except Exception as e:
+                 st.error(f"Erro ao adicionar produto: {str(e)}")
 
 if arquivo_pedido:
    data_fabricacao = data_fabricacao.strftime("%d/%m/%Y")
