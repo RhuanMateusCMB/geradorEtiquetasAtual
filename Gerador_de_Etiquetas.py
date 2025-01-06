@@ -109,41 +109,43 @@ def carregar_dados_produtos():
        return {}, {}
 
 with st.sidebar:
-  st.header("GERADOR DE ETIQUETAS CMB")
-  arquivo_pedido = st.file_uploader(label="Arraste ou Selecione o Arquivo em PDF do Pedido:", type=['pdf'])
+   st.header("GERADOR DE ETIQUETAS CMB")
+   arquivo_pedido = st.file_uploader(label="Arraste ou Selecione o Arquivo em PDF do Pedido:", type=['pdf'])
 
-  st.divider()
-  with st.expander("Adicionar Novo Produto", expanded=False):
-      st.subheader("Adicionar Novo Produto")
-      novo_id = st.number_input("ID do Produto", min_value=1, step=1, key="novo_id")
-      novo_produto = st.text_input("Nome do Produto", key="novo_produto")
-      nova_quantidade = st.number_input("Quantidade por Embalagem", min_value=0.0, step=0.1, key="nova_quantidade")
-      novos_ingredientes = st.text_area("Ingredientes", key="novos_ingredientes")
-      nova_validade = st.number_input("Prazo de Validade (dias)", min_value=1, step=1, key="nova_validade")
-      
-      if st.button("Adicionar Produto"):
-            try:
-                data = {
-                    "id": novo_id,
-                    "produto": novo_produto,
-                    "produtopacote": nova_quantidade,
-                    "ingredientes": novos_ingredientes,
-                    "prazovalidade": nova_validade,
-                    "descricao": f"Ingredientes: {novos_ingredientes} Válido {nova_validade} dia(s) após a data de fabricação."
-                }
-                supabase.table('produtos').insert(data).execute()
-                st.success("Produto adicionado com sucesso!")
-
-                # Reset dos campos
-                st.session_state.novo_id = 1
-                st.session_state.novo_produto = ""
-                st.session_state.nova_quantidade = 0.0
-                st.session_state.novos_ingredientes = ""
-                st.session_state.nova_validade = 1
-                st.experimental_rerun()
-                
-            except Exception as e:
-                st.error(f"Erro ao adicionar produto: {str(e)}")
+   st.divider()
+   with st.expander("Adicionar Novo Produto", expanded=True):  # Mantém expandido
+       st.subheader("Adicionar Novo Produto")
+       
+       if "form_submitted" not in st.session_state:
+           st.session_state.form_submitted = False
+           
+       novo_id = st.number_input("ID do Produto", min_value=1, step=1, key="novo_id")
+       novo_produto = st.text_input("Nome do Produto", key="novo_produto")
+       nova_quantidade = st.number_input("Quantidade por Embalagem", min_value=0.0, step=0.1, key="nova_quantidade")
+       novos_ingredientes = st.text_area("Ingredientes", key="novos_ingredientes")
+       nova_validade = st.number_input("Prazo de Validade (dias)", min_value=1, step=1, key="nova_validade")
+       
+       if st.button("Adicionar Produto"):
+           try:
+               data = {
+                   "id": novo_id,
+                   "produto": novo_produto,
+                   "produtopacote": nova_quantidade,
+                   "ingredientes": novos_ingredientes,
+                   "prazovalidade": nova_validade,
+                   "descricao": f"Ingredientes: {novos_ingredientes} Válido {nova_validade} dia(s) após a data de fabricação."
+               }
+               supabase.table('produtos').insert(data).execute()
+               st.success("Produto adicionado com sucesso!")
+               st.session_state.form_submitted = True
+               
+               for key in ['novo_id', 'novo_produto', 'nova_quantidade', 'novos_ingredientes', 'nova_validade']:
+                   if key in st.session_state:
+                       del st.session_state[key]
+                       
+               st.experimental_rerun()
+           except Exception as e:
+               st.error(f"Erro ao adicionar produto: {str(e)}")
 
 if arquivo_pedido:
    data_fabricacao = data_fabricacao.strftime("%d/%m/%Y")
