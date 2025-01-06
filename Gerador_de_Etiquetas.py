@@ -115,26 +115,29 @@ with st.sidebar:
    st.divider()
    with st.expander("Adicionar Novo Produto", expanded=False):
        st.subheader("Adicionar Novo Produto")
-       novo_id = st.number_input("ID do Produto", min_value=1, step=1)
-       novo_produto = st.text_input("Nome do Produto")
-       nova_quantidade = st.number_input("Quantidade por Embalagem", min_value=0.0, step=0.1)
-       novos_ingredientes = st.text_area("Ingredientes")
-       nova_validade = st.number_input("Prazo de Validade (dias)", min_value=1, step=1)
+       form = st.form("novo_produto")
+       novo_id = form.number_input("ID do Produto", min_value=1, step=1)
+       novo_produto = form.text_input("Nome do Produto")
+       nova_quantidade = form.number_input("Quantidade por Embalagem", min_value=0.0, step=0.1)
+       novos_ingredientes = form.text_area("Ingredientes")
+       nova_validade = form.number_input("Prazo de Validade (dias)", min_value=1, step=1)
        
-       if st.button("Adicionar Produto"):
-            try:
-                data = {
-                    "id": novo_id,
-                    "produto": novo_produto,
-                    "produtopacote": nova_quantidade,
-                    "ingredientes": novos_ingredientes,
-                    "prazovalidade": nova_validade,
-                    "descricao": f"Ingredientes: {novos_ingredientes} Válido {nova_validade} dia(s) após a data de fabricação."
-                }
-                supabase.table('produtos').insert(data).execute()
-                st.success("Produto adicionado com sucesso!")
-            except Exception as e:
-                st.error(f"Erro ao adicionar produto: {str(e)}")
+       if form.form_submit_button("Adicionar Produto"):
+           try:
+               data = {
+                   "id": novo_id,
+                   "produto": novo_produto,
+                   "produtopacote": nova_quantidade,
+                   "ingredientes": novos_ingredientes,
+                   "prazovalidade": nova_validade,
+                   "descricao": f"Ingredientes: {novos_ingredientes} Válido {nova_validade} dia(s) após a data de fabricação."
+               }
+               supabase.table('produtos').insert(data).execute()
+               st.success("Produto adicionado com sucesso!")
+               # Força rerun para resetar campos
+               st.rerun()
+           except Exception as e:
+               st.error(f"Erro ao adicionar produto: {str(e)}")
 
 if arquivo_pedido:
    data_fabricacao = data_fabricacao.strftime("%d/%m/%Y")
