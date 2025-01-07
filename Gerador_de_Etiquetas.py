@@ -36,65 +36,68 @@ def extrair_cliente(conteudo_pdf):
    return None
 
 def extrair_itens_pedido(conteudo_pdf, pacote_dict, nome_dict):
-  itens_pedido = []
-  
-  padrao_completo = r'(\d+)\s+(.*?)\s+(\d+,?\d*(?:\s*[gG])?)\s*(UN|UND|KG|kg|Kg|G|g|Un|Und|un|und)?\s+R\$\s*\d+,\d+\s+-----\s+R\$\s*\d+,\d+'
-  padrao_sem_nome = r'(\d+)\s+(\d+,?\d*)\s*(UN|UND|KG|kg|Kg|G|g|Un|Und|un|und)\s+R\$\s*\d+,\d+\s+-----\s+R\$\s*\d+,\d+'
-  
-  for linha in conteudo_pdf.split('\n'):
-      try:
-          if any(char.isdigit() for char in linha):
-              match_completo = re.search(padrao_completo, linha)
-              match_sem_nome = re.search(padrao_sem_nome, linha)
-              
-              if match_completo:
-                  id_produto = str(int(match_completo.group(1)))
-                  quantidade_str = match_completo.group(3)
-                  unidade = match_completo.group(4).upper()
-              elif match_sem_nome:
-                  id_produto = str(int(match_sem_nome.group(1)))
-                  quantidade_str = match_sem_nome.group(2)
-                  unidade = match_sem_nome.group(3).upper()
-              else:
-                  continue
-
-              nome_produto = nome_dict.get(id_produto, f"Produto {id_produto}")
-              
-              if unidade in ['UND', 'UN', 'U', 'Un', 'und', 'Und', 'un']:
-                  unidade = 'UN'
-              elif unidade in ['KG', 'Kg', 'kg']:
-                  unidade = 'KG'
-              elif unidade in ['G', 'g']:
-                  unidade = 'G'
-              
-              quantidade_produto = float(quantidade_str.replace(',', '.'))
-              
-              if id_produto in pacote_dict:
-                  valor_pacote = pacote_dict[id_produto]
-                  if valor_pacote == 0:
-                      etiquetas_necessarias = 0
-                  elif unidade == 'KG':
-                      quantidade_gramas = quantidade_produto * 1000
-                      valor_pacote_gramas = valor_pacote * 1000
-                      etiquetas_necessarias = math.ceil(quantidade_gramas / valor_pacote_gramas)
-                  else:
-                      etiquetas_necessarias = math.ceil(quantidade_produto / valor_pacote)
-                  
-                  item = {
-                      'number': id_produto,
-                      'id_produto': id_produto,
-                      'nome_produto': nome_produto,
-                      'quantidade_produto': quantidade_produto,
-                      'unidade': unidade,
-                      'etiquetas_necessarias': etiquetas_necessarias
-                  }
-                  itens_pedido.append(item)
-              else:
-                  st.warning(f"\nAVISO: Produto não encontrado na base de dados: {id_produto}")
-      except Exception as e:
-          st.error(f"Erro ao processar item do pedido")
-  
-  return itens_pedido
+    itens_pedido = []
+    
+    # Modificando o padrão para capturar ambos os números, mas usar apenas o segundo
+    padrao_completo = r'\d+\s+(\d+)\s+(.*?)\s+(\d+,?\d*(?:\s*[gG])?)\s*(UN|UND|KG|kg|Kg|G|g|Un|Und|un|und)?\s+R\$\s*\d+,\d+\s+-----\s+R\$\s*\d+,\d+'
+    padrao_sem_nome = r'\d+\s+(\d+)\s+(\d+,?\d*)\s*(UN|UND|KG|kg|Kg|G|g|Un|Und|un|und)\s+R\$\s*\d+,\d+\s+-----\s+R\$\s*\d+,\d+'
+    
+    for linha in conteudo_pdf.split('\n'):
+        try:
+            if any(char.isdigit() for char in linha):
+                match_completo = re.search(padrao_completo, linha)
+                match_sem_nome = re.search(padrao_sem_nome, linha)
+                
+                if match_completo:
+                    # Agora pegamos o código do produto do primeiro grupo
+                    id_produto = str(int(match_completo.group(1)))
+                    quantidade_str = match_completo.group(3)
+                    unidade = match_completo.group(4).upper() if match_completo.group(4) else 'UN'
+                elif match_sem_nome:
+                    id_produto = str(int(match_sem_nome.group(1)))
+                    quantidade_str = match_sem_nome.group(2)
+                    unidade = match_sem_nome.group(3).upper() if match_sem_nome.group(3) else 'UN'
+                else:
+                    continue
+                
+                # Resto do código permanece igual
+                nome_produto = nome_dict.get(id_produto, f"Produto {id_produto}")
+                
+                if unidade in ['UND', 'UN', 'U', 'Un', 'und', 'Und', 'un']:
+                    unidade = 'UN'
+                elif unidade in ['KG', 'Kg', 'kg']:
+                    unidade = 'KG'
+                elif unidade in ['G', 'g']:
+                    unidade = 'G'
+                
+                quantidade_produto = float(quantidade_str.replace(',', '.'))
+                
+                if id_produto in pacote_dict:
+                    valor_pacote = pacote_dict[id_produto]
+                    if valor_pacote == 0:
+                        etiquetas_necessarias = 0
+                    elif unidade == 'KG':
+                        quantidade_gramas = quantidade_produto * 1000
+                        valor_pacote_gramas = valor_pacote * 1000
+                        etiquetas_necessarias = math.ceil(quantidade_gramas / valor_pacote_gramas)
+                    else:
+                        etiquetas_necessarias = math.ceil(quantidade_produto / valor_pacote)
+                    
+                    item = {
+                        'number': id_produto,
+                        'id_produto': id_produto,
+                        'nome_produto': nome_produto,
+                        'quantidade_produto': quantidade_produto,
+                        'unidade': unidade,
+                        'etiquetas_necessarias': etiquetas_necessarias
+                    }
+                    itens_pedido.append(item)
+                else:
+                    st.warning(f"\nAVISO: Produto não encontrado na base de dados: {id_produto}")
+        except Exception as e:
+            st.error(f"Erro ao processar item do pedido: {str(e)}")
+    
+    return itens_pedido
 
 def carregar_dados_produtos():
    try:
