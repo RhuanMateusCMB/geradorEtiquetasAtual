@@ -52,8 +52,6 @@ def extrair_itens_pedido(conteudo_pdf, pacote_dict, nome_dict):
                     # Agora pegamos o código do produto do primeiro grupo
                     id_produto = str(int(match_completo.group(1)))
                     quantidade_str = match_completo.group(3)
-                    # Remover pontos antes de converter para float
-                    quantidade_produto = float(quantidade_str.replace('.', '').replace(',', '.'))
                     unidade = match_completo.group(4).upper() if match_completo.group(4) else 'UN'
                 elif match_sem_nome:
                     id_produto = str(int(match_sem_nome.group(1)))
@@ -72,7 +70,8 @@ def extrair_itens_pedido(conteudo_pdf, pacote_dict, nome_dict):
                 elif unidade in ['G', 'g']:
                     unidade = 'G'
                 
-                quantidade_produto = float(quantidade_str.replace(',', '.'))
+                # Remover pontos antes de converter para float
+                quantidade_produto = float(quantidade_str.replace('.', '').replace(',', '.'))
                 
                 if id_produto in pacote_dict:
                     valor_pacote = pacote_dict[id_produto]
