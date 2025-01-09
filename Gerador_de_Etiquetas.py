@@ -39,7 +39,7 @@ def extrair_itens_pedido(conteudo_pdf, pacote_dict, nome_dict):
     itens_pedido = []
     
     # Modificando o padrão para capturar ambos os números, mas usar apenas o segundo
-    padrao_completo = r'\d+\s+(\d+)\s+(.*?)\s+(\d+,?\d*(?:\s*[gG])?)\s*(UN|UND|KG|kg|Kg|G|g|Un|Und|un|und)?\s+R\$\s*\d+,\d+\s+-----\s+R\$\s*\d+,\d+'
+    padrao_completo = r'\d+\s+(\d+)\s+(.*?)\s+(\d+[.,]?\d*(?:\s*[gG])?)\s*(UN|UND|KG|kg|Kg|G|g|Un|Und|un|und)?\s+R\$\s*\d+,\d+\s+-----\s+R\$\s*\d+,\d+'
     padrao_sem_nome = r'\d+\s+(\d+)\s+(\d+,?\d*)\s*(UN|UND|KG|kg|Kg|G|g|Un|Und|un|und)\s+R\$\s*\d+,\d+\s+-----\s+R\$\s*\d+,\d+'
     
     for linha in conteudo_pdf.split('\n'):
