@@ -81,6 +81,9 @@ df = load_data()
 colunas_visiveis = ['id', 'produto', 'produtopacote', 'ingredientes', 'prazovalidade', 'descricao']
 df = df[colunas_visiveis] if all(col in df.columns for col in colunas_visiveis) else df
 
+# ✅ ORDENAR POR ID EM ORDEM CRESCENTE
+df = df.sort_values('id', ascending=True).reset_index(drop=True)
+
 # ✅ Editor de dados
 edited_df = st.data_editor(
     df, 
