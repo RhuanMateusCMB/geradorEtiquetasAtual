@@ -100,40 +100,107 @@ def extrair_itens_pedido(conteudo_pdf, pacote_dict, nome_dict):
     
     return itens_pedido
 
+def _ajustar_fonte_para_largura(pdf, texto, fonte, tamanho_inicial, largura_max, tamanho_minimo=5):
+    tamanho = tamanho_inicial
+    while tamanho > tamanho_minimo and pdf.stringWidth(texto, fonte, tamanho) > largura_max:
+        tamanho -= 0.5
+    return tamanho
+
+def _quebrar_em_linhas(pdf, texto, fonte, tamanho_fonte, largura_max):
+    linhas = []
+    linha_atual = ""
+    for palavra in texto.split():
+        candidato = f"{linha_atual} {palavra}".strip()
+        if not linha_atual or pdf.stringWidth(candidato, fonte, tamanho_fonte) <= largura_max:
+            linha_atual = candidato
+        else:
+            linhas.append(linha_atual)
+            linha_atual = palavra
+    if linha_atual:
+        linhas.append(linha_atual)
+    return linhas
+
+def _desenhar_titulo(pdf, title, page_width, largura_util, y_topo, tamanho_max, tamanho_minimo=6, max_linhas=2):
+    fonte = _ajustar_fonte_para_largura(pdf, title, "Helvetica-Bold", tamanho_max, largura_util, tamanho_minimo)
+    if pdf.stringWidth(title, "Helvetica-Bold", fonte) <= largura_util:
+        linhas = [title]
+    else:
+        linhas = _quebrar_em_linhas(pdf, title, "Helvetica-Bold", fonte, largura_util)
+        if len(linhas) > max_linhas:
+            linhas = linhas[:max_linhas]
+            ultima = linhas[-1]
+            while len(ultima) > 3 and pdf.stringWidth(ultima.rstrip() + "...", "Helvetica-Bold", fonte) > largura_util:
+                ultima = ultima[:-1]
+            linhas[-1] = ultima.rstrip() + "..."
+
+    pdf.setFont("Helvetica-Bold", fonte)
+    espaco = fonte + 2
+    y = y_topo
+    for linha in linhas:
+        pdf.drawCentredString(page_width / 2, y, linha)
+        y -= espaco
+    return y
+
 def desenhar_conteudo_etiqueta(pdf, tamanho_etiqueta, page_width, page_height, title, ingredientes, descricao, validade, data_fabricacao):
     if tamanho_etiqueta == "60x40mm":
+        margem = 5
+        largura_util = page_width - 2 * margem
+        texto_fab = f"Fab.: {data_fabricacao}"
+
         if descricao == "Informações na Embalagem" or descricao == "":
-            pdf.setFont("Helvetica-Bold", 9)
-            pdf.drawCentredString(page_width / 2, page_height - 20, title)
+            _desenhar_titulo(pdf, title, page_width, largura_util, page_height - 20, 10)
 
-            pdf.setFont("Helvetica", 6)
-            pdf.drawString(5, 30, f"{validade}")
-            pdf.setFont("Helvetica-Bold", 6)
-            pdf.drawRightString(page_width - 5, 30, f"Fab.: {data_fabricacao}")
+            fonte_validade = _ajustar_fonte_para_largura(pdf, validade, "Helvetica", 6, largura_util)
+            pdf.setFont("Helvetica", fonte_validade)
+            pdf.drawCentredString(page_width / 2, 26, validade)
+
+            fonte_fab = _ajustar_fonte_para_largura(pdf, texto_fab, "Helvetica-Bold", 6, largura_util)
+            pdf.setFont("Helvetica-Bold", fonte_fab)
+            pdf.drawCentredString(page_width / 2, 17, texto_fab)
 
             pdf.setFont("Helvetica", 5)
-            pdf.drawCentredString(page_width / 2, 18, "Fabricado por Baxter Indústria de")
-            pdf.drawCentredString(page_width / 2, 10, "Alimentos Ltda CNPJ: 00.558.662/000-81")
+            pdf.drawCentredString(page_width / 2, 9, "Fabricado por Baxter Indústria de")
+            pdf.drawCentredString(page_width / 2, 3, "Alimentos Ltda CNPJ: 00.558.662/000-81")
         else:
-            parte1 = descricao[:50].strip()
-            parte2 = descricao[50:100].strip()
-
-            pdf.setFont("Helvetica-Bold", 9)
-            pdf.drawCentredString(page_width / 2, page_height - 15, title)
-            pdf.setFont("Helvetica", 6)
-            pdf.drawCentredString(page_width / 2, page_height - 25, f"{ingredientes}:")
-
-            pdf.setFont("Helvetica", 5.5)
-            pdf.drawCentredString(page_width / 2, page_height - 35, parte1)
-            pdf.drawCentredString(page_width / 2, page_height - 44, parte2)
+            y = _desenhar_titulo(pdf, title, page_width, largura_util, page_height - 12, 9)
 
             pdf.setFont("Helvetica", 6)
-            pdf.drawString(5, 20, f"{validade}")
-            pdf.setFont("Helvetica-Bold", 6)
-            pdf.drawRightString(page_width - 5, 20, f"Fab.: {data_fabricacao}")
+            pdf.drawCentredString(page_width / 2, y, f"{ingredientes}:")
+            y -= 9
+
+            altura_rodape = 34
+            altura_disponivel = y - altura_rodape
+            fonte_desc = 6
+            espaco_linha = fonte_desc + 1.5
+            linhas_desc = _quebrar_em_linhas(pdf, descricao, "Helvetica", fonte_desc, largura_util)
+            while fonte_desc > 5 and len(linhas_desc) * espaco_linha > altura_disponivel:
+                fonte_desc -= 0.5
+                espaco_linha = fonte_desc + 1.5
+                linhas_desc = _quebrar_em_linhas(pdf, descricao, "Helvetica", fonte_desc, largura_util)
+
+            max_linhas = max(1, int(altura_disponivel // espaco_linha))
+            if len(linhas_desc) > max_linhas:
+                linhas_desc = linhas_desc[:max_linhas]
+                ultima = linhas_desc[-1]
+                while len(ultima) > 3 and pdf.stringWidth(ultima.rstrip() + "...", "Helvetica", fonte_desc) > largura_util:
+                    ultima = ultima[:-1]
+                linhas_desc[-1] = ultima.rstrip() + "..."
+
+            pdf.setFont("Helvetica", fonte_desc)
+            for linha in linhas_desc:
+                pdf.drawCentredString(page_width / 2, y, linha)
+                y -= espaco_linha
+
+            fonte_validade = _ajustar_fonte_para_largura(pdf, validade, "Helvetica", 6, largura_util)
+            pdf.setFont("Helvetica", fonte_validade)
+            pdf.drawCentredString(page_width / 2, 26, validade)
+
+            fonte_fab = _ajustar_fonte_para_largura(pdf, texto_fab, "Helvetica-Bold", 6, largura_util)
+            pdf.setFont("Helvetica-Bold", fonte_fab)
+            pdf.drawCentredString(page_width / 2, 17, texto_fab)
 
             pdf.setFont("Helvetica", 5)
-            pdf.drawCentredString(page_width / 2, 10, "Fabricado por: Baxter Indústria de Alimentos")
+            pdf.drawCentredString(page_width / 2, 9, "Fabricado por: Baxter Indústria de Alimentos")
             pdf.drawCentredString(page_width / 2, 3, "LTDA CNPJ: 00.558.662/000-81")
     else:
         if descricao == "Informações na Embalagem" or descricao == "":
