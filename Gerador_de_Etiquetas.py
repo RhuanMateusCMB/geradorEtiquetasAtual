@@ -142,7 +142,7 @@ def _desenhar_titulo(pdf, title, page_width, largura_util, y_topo, tamanho_max, 
     return y
 
 def desenhar_conteudo_etiqueta(pdf, tamanho_etiqueta, page_width, page_height, title, ingredientes, descricao, validade, data_fabricacao):
-    if tamanho_etiqueta == "40x60mm":
+    if tamanho_etiqueta == "60x40mm":
         margem = 5
         largura_util = page_width - 2 * margem
         texto_fab = f"Fab.: {data_fabricacao}"
@@ -249,7 +249,7 @@ with st.sidebar:
    st.header("GERADOR DE ETIQUETAS CMB")
    tamanho_etiqueta = st.radio(
        label="Tamanho da Etiqueta:",
-       options=["Padrão (9,8x2,5cm)", "40x60mm"],
+       options=["Padrão (9,8x2,5cm)", "60x40mm"],
        index=0
    )
    arquivo_pedido = st.file_uploader(label="Arraste ou Selecione o Arquivo em PDF do Pedido:", type=['pdf'])
@@ -312,9 +312,9 @@ if arquivo_pedido:
                progress_bar = st.progress(0)
                status_text = st.empty()
 
-               if tamanho_etiqueta == "40x60mm":
-                   page_width = 4.0 / 2.54 * inch
-                   page_height = 6.0 / 2.54 * inch
+               if tamanho_etiqueta == "60x40mm":
+                   page_width = 6.0 / 2.54 * inch
+                   page_height = 4.0 / 2.54 * inch
                else:
                    page_width = 9.8 / 2.54 * inch
                    page_height = 2.5 / 2.54 * inch
