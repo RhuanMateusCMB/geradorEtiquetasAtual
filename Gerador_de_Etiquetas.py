@@ -100,6 +100,72 @@ def extrair_itens_pedido(conteudo_pdf, pacote_dict, nome_dict):
     
     return itens_pedido
 
+def desenhar_conteudo_etiqueta(pdf, tamanho_etiqueta, page_width, page_height, title, ingredientes, descricao, validade, data_fabricacao):
+    if tamanho_etiqueta == "60x40mm":
+        if descricao == "Informações na Embalagem" or descricao == "":
+            pdf.setFont("Helvetica-Bold", 9)
+            pdf.drawCentredString(page_width / 2, page_height - 20, title)
+
+            pdf.setFont("Helvetica", 6)
+            pdf.drawString(5, 30, f"{validade}")
+            pdf.setFont("Helvetica-Bold", 6)
+            pdf.drawRightString(page_width - 5, 30, f"Fab.: {data_fabricacao}")
+
+            pdf.setFont("Helvetica", 5)
+            pdf.drawCentredString(page_width / 2, 18, "Fabricado por Baxter Indústria de")
+            pdf.drawCentredString(page_width / 2, 10, "Alimentos Ltda CNPJ: 00.558.662/000-81")
+        else:
+            parte1 = descricao[:50].strip()
+            parte2 = descricao[50:100].strip()
+
+            pdf.setFont("Helvetica-Bold", 9)
+            pdf.drawCentredString(page_width / 2, page_height - 15, title)
+            pdf.setFont("Helvetica", 6)
+            pdf.drawCentredString(page_width / 2, page_height - 25, f"{ingredientes}:")
+
+            pdf.setFont("Helvetica", 5.5)
+            pdf.drawCentredString(page_width / 2, page_height - 35, parte1)
+            pdf.drawCentredString(page_width / 2, page_height - 44, parte2)
+
+            pdf.setFont("Helvetica", 6)
+            pdf.drawString(5, 20, f"{validade}")
+            pdf.setFont("Helvetica-Bold", 6)
+            pdf.drawRightString(page_width - 5, 20, f"Fab.: {data_fabricacao}")
+
+            pdf.setFont("Helvetica", 5)
+            pdf.drawCentredString(page_width / 2, 10, "Fabricado por: Baxter Indústria de Alimentos")
+            pdf.drawCentredString(page_width / 2, 3, "LTDA CNPJ: 00.558.662/000-81")
+    else:
+        if descricao == "Informações na Embalagem" or descricao == "":
+            pdf.setFont("Helvetica-Bold", 10)
+            pdf.drawCentredString(page_width / 2, page_height - 20, title)
+
+            pdf.setFont("Helvetica", 7)
+            pdf.drawString(30, 15, f"{validade}")
+            pdf.setFont("Helvetica-Bold", 7)
+            pdf.drawString(page_width - 80, 15, f"Fab.: {data_fabricacao}")
+            pdf.setFont("Helvetica", 7)
+            pdf.drawCentredString(140, 5, "Fabricado por Baxter Indústria de Alimentos Ltda CNPJ: 00.558.662/000-81")
+        else:
+            parte1 = descricao[:90].strip()
+            parte2 = descricao[90:].strip()
+
+            pdf.setFont("Helvetica-Bold", 10)
+            pdf.drawCentredString(140, 60, title)
+            pdf.setFont("Helvetica", 7)
+            pdf.drawCentredString(140, 50, f"{ingredientes}:")
+
+            pdf.setFont("Helvetica", 6)
+            pdf.drawCentredString(page_width / 2, page_height - 30, parte1)
+            pdf.drawCentredString(page_width / 2, page_height - 40, parte2)
+
+            pdf.setFont("Helvetica", 7)
+            pdf.drawString(30, 15, f"{validade}")
+            pdf.setFont("Helvetica-Bold", 7)
+            pdf.drawString(page_width - 80, 15, f"Fab.: {data_fabricacao}")
+            pdf.setFont("Helvetica", 7)
+            pdf.drawCentredString(140, 5, "Fabricado por: Baxter Indústria de Alimentos LTDA CNPJ: 00.558.662/000-81")
+
 def carregar_dados_produtos():
    try:
        response = supabase.table('produtos').select('*').execute()
@@ -114,6 +180,11 @@ def carregar_dados_produtos():
 
 with st.sidebar:
    st.header("GERADOR DE ETIQUETAS CMB")
+   tamanho_etiqueta = st.radio(
+       label="Tamanho da Etiqueta:",
+       options=["Padrão (9,8x2,5cm)", "60x40mm"],
+       index=0
+   )
    arquivo_pedido = st.file_uploader(label="Arraste ou Selecione o Arquivo em PDF do Pedido:", type=['pdf'])
 
    st.divider()
@@ -174,8 +245,12 @@ if arquivo_pedido:
                progress_bar = st.progress(0)
                status_text = st.empty()
 
-               page_width = 9.8 / 2.54 * inch
-               page_height = 2.5 / 2.54 * inch
+               if tamanho_etiqueta == "60x40mm":
+                   page_width = 6.0 / 2.54 * inch
+                   page_height = 4.0 / 2.54 * inch
+               else:
+                   page_width = 9.8 / 2.54 * inch
+                   page_height = 2.5 / 2.54 * inch
 
                for idx, item in enumerate(itens_pedido):
                    produto = item["nome_produto"]
@@ -220,35 +295,10 @@ if arquivo_pedido:
                            if not any(char.isdigit() for char in validade):
                                validade = 'Consumo Diário.'
 
-                           if descricao == "Informações na Embalagem" or descricao == "":
-                               pdf.setFont("Helvetica-Bold", 10)
-                               pdf.drawCentredString(page_width / 2, page_height - 20, title)
-                               
-                               pdf.setFont("Helvetica", 7)
-                               pdf.drawString(30, 15, f"{validade}")
-                               pdf.setFont("Helvetica-Bold", 7)
-                               pdf.drawString(page_width - 80, 15, f"Fab.: {data_fabricacao}")
-                               pdf.setFont("Helvetica", 7)
-                               pdf.drawCentredString(140, 5, "Fabricado por Baxter Indústria de Alimentos Ltda CNPJ: 00.558.662/000-81")
-                           else:
-                               parte1 = descricao[:90].strip()
-                               parte2 = descricao[90:].strip()
-
-                               pdf.setFont("Helvetica-Bold", 10)
-                               pdf.drawCentredString(140, 60, title)
-                               pdf.setFont("Helvetica", 7)
-                               pdf.drawCentredString(140, 50, f"{ingredientes}:")
-
-                               pdf.setFont("Helvetica", 6)
-                               pdf.drawCentredString(page_width / 2, page_height - 30, parte1)
-                               pdf.drawCentredString(page_width / 2, page_height - 40, parte2)
-
-                               pdf.setFont("Helvetica", 7)
-                               pdf.drawString(30, 15, f"{validade}")
-                               pdf.setFont("Helvetica-Bold", 7)
-                               pdf.drawString(page_width - 80, 15, f"Fab.: {data_fabricacao}")
-                               pdf.setFont("Helvetica", 7)
-                               pdf.drawCentredString(140, 5, "Fabricado por: Baxter Indústria de Alimentos LTDA CNPJ: 00.558.662/000-81")
+                           desenhar_conteudo_etiqueta(
+                               pdf, tamanho_etiqueta, page_width, page_height,
+                               title, ingredientes, descricao, validade, data_fabricacao
+                           )
                            pdf.save()
                        except Exception as e:
                            st.error(f"Erro ao gerar etiqueta: {str(e)}")
